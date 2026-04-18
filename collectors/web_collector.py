@@ -2,10 +2,10 @@ from duckduckgo_search import DDGS
 
 
 QUERY_TEMPLATES = [
-    "{keyword} 마케팅 전략",
-    "{keyword} 캠페인 사례",
-    "{keyword} 브랜드 콘텐츠",
-    "{keyword} SNS 마케팅",
+    "{keyword} 사례",
+    "{keyword} 트렌드",
+    "{keyword} 성공 사례",
+    "{keyword} 인스타그램 콘텐츠",
 ]
 
 

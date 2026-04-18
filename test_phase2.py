@@ -2,7 +2,7 @@
 from collectors.web_collector import collect_web_references
 
 
-def test_web_collector(keyword: str = "제로웨이스트"):
+def test_web_collector(keyword: str = "브랜드 스토리텔링"):
     print(f"=== 웹 레퍼런스 수집: '{keyword}' ===\n")
     results = collect_web_references(keyword, max_results=3)
 
@@ -22,5 +22,5 @@ def test_web_collector(keyword: str = "제로웨이스트"):
 
 if __name__ == "__main__":
     import sys
-    keyword = sys.argv[1] if len(sys.argv) > 1 else "제로웨이스트"
+    keyword = sys.argv[1] if len(sys.argv) > 1 else "브랜드 스토리텔링"
     test_web_collector(keyword)
