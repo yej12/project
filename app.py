@@ -54,6 +54,8 @@ if st.button("🔍 수집 및 콘텐츠 생성", type="primary", disabled=not ke
                 col_b.markdown(idea.get("hook", "-"))
                 col_a.markdown(f"**본문 방향**")
                 col_b.markdown(idea.get("body", "-"))
+                col_a.markdown(f"**참고 브랜드**")
+                col_b.markdown(idea.get("brand", "-"))
                 col_a.markdown(f"**해시태그**")
                 col_b.markdown(idea.get("hashtags", "-"))
 
