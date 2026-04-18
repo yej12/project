@@ -8,6 +8,7 @@
 - **웹 검색**: DuckDuckGo Search (`duckduckgo-search`) — API 키 불필요
 - **유튜브 검색**: YouTube Data API v3 (`google-api-python-client`) — API 키 필요
 - **콘텐츠 생성**: Claude API (`anthropic`, `claude-sonnet-4-6`) — API 키 필요
+- **노션 연동**: Notion API (`notion-client`) — API 키 + Database ID 필요
 - **환경변수**: `python-dotenv`
 
 ## 프로젝트 구조
@@ -26,6 +27,9 @@ project/
 ├── generator/
 │   ├── __init__.py
 │   └── instagram_generator.py  # Claude API 콘텐츠 생성
+├── notions/
+│   ├── __init__.py
+│   └── notion_exporter.py      # Notion 표에 콘텐츠 저장
 └── CLAUDE.md
 ```
 
@@ -49,6 +53,8 @@ python main.py --keyword "비건" --max-results 5
 ```
 ANTHROPIC_API_KEY=...
 YOUTUBE_API_KEY=...
+NOTION_API_KEY=...
+NOTION_DATABASE_ID=...
 ```
 
 ## 개발 계획
@@ -72,13 +78,19 @@ YOUTUBE_API_KEY=...
 - [ ] 인스타그램 포스트 아이디어 10개 생성 (유형 / 후킹 문구 / 본문 방향 / 해시태그)
 - [ ] `claude-sonnet-4-6` 모델 + prompt caching 적용
 
-### Phase 5 — CLI 진입점 (`main.py`)
+### Phase 5 — Notion 내보내기 (`notions/notion_exporter.py`)
+- [ ] Notion API 연동 (`notion-client`)
+- [ ] 콘텐츠 아이디어 10개를 Notion Database 표에 행(row)으로 저장
+- [ ] 표 컬럼: 콘텐츠 유형 / 후킹 문구 / 본문 방향 / 해시태그 / 키워드 / 생성일
+
+### Phase 6 — CLI 진입점 (`main.py`)
 - [ ] `argparse`로 `--keyword`, `--max-results` 옵션 처리
 - [ ] 수집 → 생성 파이프라인 연결 및 결과 출력
 
-### Phase 6 — 검증
+### Phase 7 — 검증
 - [ ] 키워드 입력 → 웹/유튜브 레퍼런스 수집 확인
 - [ ] 인스타 콘텐츠 아이디어 10개 정상 출력 확인
+- [ ] Notion Database에 행(row) 자동 생성 확인
 
 ---
 
