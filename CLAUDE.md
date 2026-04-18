@@ -51,6 +51,37 @@ ANTHROPIC_API_KEY=...
 YOUTUBE_API_KEY=...
 ```
 
+## 개발 계획
+
+### Phase 1 — 프로젝트 초기화
+- [ ] `requirements.txt`, `.env.example`, `.gitignore` 생성
+- [ ] 패키지 디렉토리 구조 생성 (`collectors/`, `generator/`)
+
+### Phase 2 — 웹 수집기 (`collectors/web_collector.py`)
+- [ ] `duckduckgo-search` 라이브러리로 키워드 검색 구현
+- [ ] 쿼리 자동 확장: `"{keyword} 마케팅 전략"`, `"{keyword} 캠페인 사례"` 등
+- [ ] 결과 파싱: 제목 + URL + 요약 텍스트 반환
+
+### Phase 3 — 유튜브 수집기 (`collectors/youtube_collector.py`)
+- [ ] YouTube Data API `search.list` 연동
+- [ ] 키워드 기반 마케팅 영상 검색 (최대 10개)
+- [ ] 결과 파싱: 영상 제목 + 채널명 + 설명 + URL 반환
+
+### Phase 4 — 인스타 콘텐츠 생성기 (`generator/instagram_generator.py`)
+- [ ] 수집 레퍼런스를 Claude API 프롬프트로 조합
+- [ ] 인스타그램 포스트 아이디어 10개 생성 (유형 / 후킹 문구 / 본문 방향 / 해시태그)
+- [ ] `claude-sonnet-4-6` 모델 + prompt caching 적용
+
+### Phase 5 — CLI 진입점 (`main.py`)
+- [ ] `argparse`로 `--keyword`, `--max-results` 옵션 처리
+- [ ] 수집 → 생성 파이프라인 연결 및 결과 출력
+
+### Phase 6 — 검증
+- [ ] 키워드 입력 → 웹/유튜브 레퍼런스 수집 확인
+- [ ] 인스타 콘텐츠 아이디어 10개 정상 출력 확인
+
+---
+
 ## 출력 예시
 
 - 수집된 웹 레퍼런스 목록 (제목 + URL + 요약)
