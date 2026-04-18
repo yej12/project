@@ -1,5 +1,5 @@
 import os
-import anthropic
+from groq import Groq
 
 
 SYSTEM_PROMPT = """당신은 인스타그램 콘텐츠 전략 전문가입니다.
@@ -14,37 +14,26 @@ SYSTEM_PROMPT = """당신은 인스타그램 콘텐츠 전략 전문가입니다
 
 
 def generate_instagram_content(keyword: str, references: list[dict]) -> list[dict]:
-    api_key = os.getenv("ANTHROPIC_API_KEY")
+    api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
-        raise ValueError("ANTHROPIC_API_KEY 환경변수가 설정되지 않았습니다.")
+        raise ValueError("GROQ_API_KEY 환경변수가 설정되지 않았습니다.")
 
-    client = anthropic.Anthropic(api_key=api_key)
-
+    client = Groq(api_key=api_key)
     ref_text = _format_references(references)
 
-    message = client.messages.create(
-        model="claude-sonnet-4-6",
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
         max_tokens=4096,
-        system=SYSTEM_PROMPT,
         messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
             {
                 "role": "user",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": ref_text,
-                        "cache_control": {"type": "ephemeral"},
-                    },
-                    {
-                        "type": "text",
-                        "text": f"위 레퍼런스를 바탕으로 '{keyword}' 주제의 인스타그램 콘텐츠 아이디어 10개를 제안해주세요.",
-                    },
-                ],
-            }
+                "content": f"{ref_text}\n\n위 레퍼런스를 바탕으로 '{keyword}' 주제의 인스타그램 콘텐츠 아이디어 10개를 제안해주세요.",
+            },
         ],
     )
 
-    raw = message.content[0].text
+    raw = response.choices[0].message.content
     return _parse_ideas(raw)
 
 
