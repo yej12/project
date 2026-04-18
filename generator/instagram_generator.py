@@ -2,22 +2,27 @@ import os
 from groq import Groq
 
 
-SYSTEM_PROMPT = """당신은 인스타그램 콘텐츠 전략 전문가입니다.
-수집된 마케팅 레퍼런스를 분석하여 구체적이고 실행 가능한 인스타그램 콘텐츠 아이디어를 제안합니다.
+SYSTEM_PROMPT = """You are an Instagram content strategist specializing in marketing and branding.
+Generate Instagram content ideas in Korean based on the provided references.
 
-반드시 지켜야 할 규칙:
-- 추상적인 키워드 나열 절대 금지 (예: "바이럴 마케팅의 특징을 소개합니다" 같은 표현 금지)
-- 애플, 나이키, 파타고니아, 올드스파이스 등 실제 브랜드의 구체적인 캠페인/사례를 인용할 것
-- 구체적인 수치, 스토리, 에피소드를 포함할 것
-- 2024~2025년 최신 트렌드 기반으로 작성할 것
+STRICT RULES:
+- Write everything in Korean only
+- Never use abstract descriptions like "마케팅의 특징을 소개합니다"
+- Always cite real brand examples (Apple, Nike, Patagonia, Coca-Cola, etc.) with specific campaigns
+- Include concrete numbers, stories, or facts
+- Focus on 2024-2025 marketing trends
+- Topic must be about marketing/branding only
 
-각 아이디어는 반드시 아래 형식으로 작성하세요:
+Output EXACTLY 10 ideas using this format (no deviation):
 
-[번호]. 콘텐츠 유형: 카드뉴스 / 릴스 / 사진 중 하나
-후킹 문구: 첫 줄에 시선을 끄는 구체적인 문장 (숫자, 브랜드명, 사건 포함)
-본문 방향: 다룰 핵심 내용 2~3줄 (구체적 사례/수치 포함)
-참고 브랜드: 브랜드명 — 캠페인명 또는 전략 한 줄 설명
-해시태그: #태그1 #태그2 #태그3 (5개 이상)"""
+1. 콘텐츠 유형: 카드뉴스
+후킹 문구: (specific hook with brand name or number)
+본문 방향: (2-3 lines with concrete examples)
+참고 브랜드: (Brand — Campaign name)
+해시태그: #tag1 #tag2 #tag3 #tag4 #tag5
+
+2. 콘텐츠 유형: 릴스
+..."""
 
 
 def generate_instagram_content(keyword: str, references: list[dict]) -> list[dict]:
@@ -31,11 +36,12 @@ def generate_instagram_content(keyword: str, references: list[dict]) -> list[dic
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         max_tokens=4096,
+        temperature=0.7,
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {
                 "role": "user",
-                "content": f"{ref_text}\n\n위 레퍼런스를 바탕으로 '{keyword}' 주제의 인스타그램 콘텐츠 아이디어 10개를 제안해주세요. 반드시 실제 브랜드 사례와 구체적인 내용을 포함하세요.",
+                "content": f"{ref_text}\n\n키워드: '{keyword}'\n위 레퍼런스를 바탕으로 인스타그램 콘텐츠 아이디어 10개를 정해진 형식으로 작성하세요.",
             },
         ],
     )
@@ -45,13 +51,12 @@ def generate_instagram_content(keyword: str, references: list[dict]) -> list[dic
 
 
 def _format_references(references: list[dict]) -> str:
-    lines = ["## 수집된 마케팅 레퍼런스\n"]
+    lines = ["## 마케팅 레퍼런스\n"]
     for i, r in enumerate(references, 1):
         lines.append(f"[{i}] {r.get('title', '')}")
-        if r.get("summary") or r.get("description"):
-            lines.append(f"    {r.get('summary') or r.get('description', '')[:500]}")
-        if r.get("url"):
-            lines.append(f"    출처: {r['url']}")
+        body = r.get("summary") or r.get("description", "")
+        if body:
+            lines.append(f"    {body[:500]}")
         lines.append("")
     return "\n".join(lines)
 
@@ -61,26 +66,34 @@ def _parse_ideas(raw: str) -> list[dict]:
     current = {}
 
     for line in raw.splitlines():
-        line = line.strip()
+        line = line.strip().lstrip("*").rstrip("*").strip()
         if not line:
             continue
 
-        if line and line[0].isdigit() and "." in line[:3]:
-            if current:
+        # 번호로 시작하는 새 아이디어
+        if line and line[0].isdigit() and ("." in line[:3] or "." in line[:4]):
+            if current.get("hook") or current.get("type"):
                 ideas.append(current)
-            current = {"raw": line}
-        elif line.startswith("콘텐츠 유형:"):
-            current["type"] = line.replace("콘텐츠 유형:", "").strip()
-        elif line.startswith("후킹 문구:"):
-            current["hook"] = line.replace("후킹 문구:", "").strip()
-        elif line.startswith("본문 방향:"):
-            current["body"] = line.replace("본문 방향:", "").strip()
-        elif line.startswith("참고 브랜드:"):
-            current["brand"] = line.replace("참고 브랜드:", "").strip()
-        elif line.startswith("해시태그:"):
-            current["hashtags"] = line.replace("해시태그:", "").strip()
+            current = {}
+            continue
 
-    if current:
+        # 필드 파싱 (볼드 마크다운 제거 후 매칭)
+        clean = line.replace("**", "")
+        if clean.startswith("콘텐츠 유형:"):
+            current["type"] = clean.split(":", 1)[1].strip()
+        elif clean.startswith("후킹 문구:"):
+            current["hook"] = clean.split(":", 1)[1].strip()
+        elif clean.startswith("본문 방향:"):
+            current["body"] = clean.split(":", 1)[1].strip()
+        elif clean.startswith("참고 브랜드:"):
+            current["brand"] = clean.split(":", 1)[1].strip()
+        elif clean.startswith("해시태그:"):
+            current["hashtags"] = clean.split(":", 1)[1].strip()
+        elif current.get("body") and not any(clean.startswith(k) for k in ["콘텐츠", "후킹", "본문", "참고", "해시"]):
+            # 본문 방향이 여러 줄일 경우 이어붙임
+            current["body"] += " " + clean
+
+    if current.get("hook") or current.get("type"):
         ideas.append(current)
 
     return ideas
